@@ -1,0 +1,169 @@
+<section class="page-header">
+  <div class="header-main">
+    <p class="eyebrow">Administration</p>
+    <h1>Control Center</h1>
+  </div>
+  <div class="header-actions">
+    <button class="primary-button" (click)="setTab('users')">Provision Account</button>
+  </div>
+</section>
+
+<p class="form-error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+<section class="metric-grid">
+  <article class="metric-card" *ngFor="let metric of adminMetrics">
+    <span>{{ metric.label }}</span>
+    <strong>{{ metric.value }}</strong>
+    <p class="text-dim mt-8">{{ metric.caption }}</p>
+  </article>
+</section>
+
+<div class="glass-card panel">
+  <div class="tabs-header">
+    <div class="tabs">
+      <button [class.active]="activeTab === 'users'" (click)="setTab('users')">User Directory</button>
+      <button [class.active]="activeTab === 'categories'" (click)="setTab('categories')">Taxonomy</button>
+    </div>
+  </div>
+
+  <div class="tab-content">
+    <section class="workspace-grid-v2" *ngIf="activeTab === 'users'">
+      <div class="table-container">
+        <div class="loading" *ngIf="loading">Fetching records...</div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Member</th>
+              <th>Access Role</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let user of users">
+              <td>
+                <div class="user-cell">
+                  <strong>{{ user.fullName }}</strong>
+                  <small>{{ user.email }}</small>
+                </div>
+              </td>
+              <td><span class="status-pill small">{{ user.role }}</span></td>
+              <td>
+                <span class="status-indicator" [class.active]="user.isActive"></span>
+                {{ user.isActive ? 'Active' : 'Inactive' }}
+              </td>
+              <td>
+                <div class="action-cluster">
+                  <button class="icon-button" (click)="editUser(user)" title="Edit">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  </button>
+                  <button class="icon-button danger" (click)="deleteUser(user)" title="Delete/Deactivate">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <aside class="side-panel">
+        <div class="glass-card inner-panel">
+          <h3>{{ editingUser ? 'Modify Account' : 'New Account' }}</h3>
+          <form [formGroup]="userForm" (ngSubmit)="submitUser()">
+            <div class="form-group">
+              <label>Full Name</label>
+              <input type="text" formControlName="fullName">
+            </div>
+            <div class="form-group">
+              <label>Email Address</label>
+              <input type="email" formControlName="email">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Role</label>
+                <select formControlName="role">
+                  <option value="User">Standard User</option>
+                  <option value="Admin">Administrator</option>
+                </select>
+              </div>
+              <div class="form-group centered-check">
+                <label class="check-wrap">
+                  <input type="checkbox" formControlName="isActive">
+                  <span>Is Active</span>
+                </label>
+              </div>
+            </div>
+            <div class="action-row">
+              <button class="primary-button full" type="submit" [disabled]="saving">
+                {{ saving ? 'Saving...' : (editingUser ? 'Update' : 'Create') }}
+              </button>
+              <button class="secondary-button" type="button" *ngIf="editingUser" (click)="resetUserForm()">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </aside>
+    </section>
+
+    <section class="workspace-grid-v2" *ngIf="activeTab === 'categories'">
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Category Name</th>
+              <th>Project Count</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let category of categories">
+              <td>
+                <div class="category-cell">
+                  <span class="color-dot" [style.background]="category.color"></span>
+                  <strong>{{ category.name }}</strong>
+                </div>
+              </td>
+              <td>{{ category.projectCount }}</td>
+              <td>
+                <div class="action-cluster">
+                  <button class="icon-button" (click)="editCategory(category)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  </button>
+                  <button class="icon-button danger" (click)="deleteCategory(category)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <aside class="side-panel">
+        <div class="glass-card inner-panel">
+          <h3>{{ editingCategory ? 'Modify Category' : 'New Category' }}</h3>
+          <form [formGroup]="categoryForm" (ngSubmit)="submitCategory()">
+            <div class="form-group">
+              <label>Category Name</label>
+              <input type="text" formControlName="name">
+            </div>
+            <div class="form-group">
+              <label>Theme Color</label>
+              <input type="color" formControlName="color" class="color-input">
+            </div>
+            <div class="form-group">
+              <label>Description</label>
+              <textarea rows="3" formControlName="description"></textarea>
+            </div>
+            <div class="action-row">
+              <button class="primary-button full" type="submit" [disabled]="saving">
+                {{ saving ? 'Saving...' : (editingCategory ? 'Update' : 'Create') }}
+              </button>
+              <button class="secondary-button" type="button" *ngIf="editingCategory" (click)="resetCategoryForm()">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </aside>
+    </section>
+  </div>
+</div>

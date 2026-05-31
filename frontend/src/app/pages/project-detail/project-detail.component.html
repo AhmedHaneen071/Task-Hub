@@ -1,0 +1,157 @@
+<nav class="breadcrumb">
+  <a routerLink="/projects" class="text-link">← Back to Projects</a>
+</nav>
+
+<div class="loading" *ngIf="loading">Synchronizing project...</div>
+<p class="form-error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+<ng-container *ngIf="project">
+  <section class="detail-header">
+    <div class="header-left">
+      <span class="eyebrow">{{ project.category.name }}</span>
+      <h1>{{ project.name }}</h1>
+      <p class="header-desc">{{ project.description }}</p>
+    </div>
+    <div class="header-right">
+      <div class="meta-cluster">
+        <div class="meta-item">
+          <span>Status</span>
+          <span class="status-pill" [appStatusHighlight]="project.status">{{ project.status }}</span>
+        </div>
+        <div class="meta-item">
+          <span>Priority</span>
+          <strong>{{ project.priority }}</strong>
+        </div>
+        <div class="meta-item">
+          <span>Owner</span>
+          <strong>{{ project.owner.fullName }}</strong>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="project-view-grid">
+    <aside class="project-sidebar">
+      <div class="glass-card panel">
+        <h3>{{ editingTask ? 'Update Task' : 'Add Task' }}</h3>
+        <form [formGroup]="taskForm" (ngSubmit)="submitTask()">
+          <div class="form-group">
+            <label>Task Title</label>
+            <input type="text" formControlName="title" placeholder="What needs doing?">
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea rows="3" formControlName="description" placeholder="Details..."></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Status</label>
+              <select formControlName="status">
+                <option *ngFor="let option of taskStatusOptions" [ngValue]="option.value">{{ option.label }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Due Date</label>
+              <input type="date" formControlName="dueDate">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Assign To</label>
+            <select formControlName="assigneeId">
+              <option [ngValue]="0">Unassigned</option>
+              <option *ngFor="let user of users" [ngValue]="user.id">{{ user.fullName }}</option>
+            </select>
+          </div>
+          <div class="action-row">
+            <button class="primary-button full" type="submit" [disabled]="savingTask">
+              {{ savingTask ? 'Processing...' : (editingTask ? 'Save Task' : 'Create Task') }}
+            </button>
+            <button class="secondary-button" type="button" *ngIf="editingTask" (click)="resetTaskForm()">Cancel</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="glass-card panel mt-24">
+        <h3>Activity Stream</h3>
+        <div class="activity-feed">
+          <article class="activity-item" *ngFor="let activity of project.activities">
+            <div class="item-content">
+              <p><strong>{{ activity.userName }}</strong> {{ activity.message }}</p>
+              <small>{{ activity.createdAt | date:'MMM d, h:mm a' }}</small>
+            </div>
+          </article>
+        </div>
+      </div>
+    </aside>
+
+    <main class="project-content">
+      <div class="task-sections">
+        <section class="tasks-column">
+          <div class="column-header">
+            <h3>Backlog & In Progress</h3>
+            <span class="count-badge">{{ project.tasks.length }}</span>
+          </div>
+          
+          <div class="tasks-container">
+            <article class="glass-card task-item-v2" *ngFor="let task of project.tasks" [class.active]="selectedTask?.id === task.id">
+              <div class="task-main-content" (click)="selectTask(task)">
+                <div class="task-head">
+                  <span class="status-pill small" [appStatusHighlight]="task.status">{{ task.status }}</span>
+                  <div class="task-ops">
+                    <button class="icon-button sm" (click)="editTask(task); $event.stopPropagation()">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    </button>
+                    <button class="icon-button sm danger" (click)="deleteTask(task); $event.stopPropagation()">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
+                  </div>
+                </div>
+                <strong>{{ task.title }}</strong>
+                <p class="task-desc">{{ task.description | slice:0:80 }}{{ task.description.length > 80 ? '...' : '' }}</p>
+                <div class="task-footer">
+                  <span class="assignee">{{ task.assigneeName || 'Unassigned' }}</span>
+                  <span class="comment-count">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    {{ task.commentCount }}
+                  </span>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="comments-column" *ngIf="selectedTask">
+          <div class="glass-card panel comments-panel">
+            <div class="panel-header">
+              <h3>Discussion</h3>
+              <span class="text-dim">Re: {{ selectedTask.title }}</span>
+            </div>
+
+            <form [formGroup]="commentForm" (ngSubmit)="submitComment()" class="comment-form">
+              <textarea rows="2" formControlName="message" placeholder="Write a comment..."></textarea>
+              <div class="form-actions">
+                <button class="primary-button sm" type="submit" [disabled]="savingComment">Post</button>
+              </div>
+            </form>
+
+            <div class="comments-list">
+              <article class="comment-row-v2" *ngFor="let comment of comments">
+                <div class="comment-body">
+                  <div class="comment-meta">
+                    <strong>{{ comment.authorName }}</strong>
+                    <small>{{ comment.createdAt | date:'shortTime' }}</small>
+                  </div>
+                  <p>{{ comment.message }}</p>
+                </div>
+                <button class="icon-button sm danger" (click)="deleteComment(comment)">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
+              </article>
+              <div *ngIf="comments.length === 0" class="empty-notif">No comments yet.</div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+</ng-container>

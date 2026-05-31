@@ -1,0 +1,66 @@
+erDiagram
+    AppUsers ||--o{ Projects : owns
+    AppUsers ||--o{ ProjectTasks : assigned
+    AppUsers ||--o{ TaskComments : writes
+    AppUsers ||--o{ ActivityLogs : performs
+    Categories ||--o{ Projects : groups
+    Projects ||--o{ ProjectTasks : contains
+    Projects ||--o{ ActivityLogs : records
+    ProjectTasks ||--o{ TaskComments : has
+
+    AppUsers {
+        int Id PK
+        nvarchar FullName
+        nvarchar Email UK
+        nvarchar PasswordHash
+        nvarchar Role
+        nvarchar AvatarUrl
+        bit IsActive
+        datetime2 CreatedAt
+    }
+
+    Categories {
+        int Id PK
+        nvarchar Name
+        nvarchar Color
+        nvarchar Description
+    }
+
+    Projects {
+        int Id PK
+        nvarchar Name
+        nvarchar Description
+        nvarchar Status
+        nvarchar Priority
+        datetime2 DueDate
+        datetime2 CreatedAt
+        int OwnerId FK
+        int CategoryId FK
+    }
+
+    ProjectTasks {
+        int Id PK
+        nvarchar Title
+        nvarchar Description
+        nvarchar Status
+        datetime2 DueDate
+        datetime2 CreatedAt
+        int ProjectId FK
+        int AssigneeId FK
+    }
+
+    TaskComments {
+        int Id PK
+        nvarchar Message
+        datetime2 CreatedAt
+        int TaskId FK
+        int AuthorId FK
+    }
+
+    ActivityLogs {
+        int Id PK
+        nvarchar Message
+        datetime2 CreatedAt
+        int ProjectId FK
+        int UserId FK
+    }

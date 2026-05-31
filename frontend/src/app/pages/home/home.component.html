@@ -1,0 +1,20 @@
+<section class="hero">
+  <p class="eyebrow">Next-Gen Workspace</p>
+  <h1>Engineered for precision.</h1>
+  <p class="hero-text">
+    The all-in-one platform for high-performance teams to track projects, 
+    manage tasks, and ship faster with absolute clarity.
+  </p>
+  <div class="hero-actions">
+    <a class="primary-button" routerLink="/signup">Join TaskHub</a>
+    <a class="secondary-button" routerLink="/login">Sign In</a>
+  </div>
+</section>
+
+<section class="feature-band">
+  <article class="feature-tile" *ngFor="let feature of features; let index = index">
+    <div class="feature-icon" [style.background]="feature.accent"></div>
+    <h3>{{ feature.title }}</h3>
+    <p>{{ feature.body }}</p>
+  </article>
+</section>

@@ -1,0 +1,33 @@
+<a class="back-link" routerLink="/dashboard">Back to dashboard</a>
+
+<div class="loading" *ngIf="loading">Loading profile...</div>
+<p class="form-error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+<section class="profile-layout" *ngIf="user">
+  <div class="profile-photo" [style.backgroundImage]="user.avatarUrl ? 'url(' + user.avatarUrl + ')' : null">
+    <span *ngIf="!user.avatarUrl">{{ user.fullName.charAt(0) }}</span>
+  </div>
+
+  <div class="panel profile-details">
+    <p class="eyebrow">Profile</p>
+    <h1>{{ user.fullName }}</h1>
+    <dl>
+      <div>
+        <dt>Email</dt>
+        <dd>{{ user.email }}</dd>
+      </div>
+      <div>
+        <dt>Role</dt>
+        <dd>{{ user.role }}</dd>
+      </div>
+      <div>
+        <dt>Status</dt>
+        <dd>{{ user.isActive ? 'Active' : 'Inactive' }}</dd>
+      </div>
+      <div>
+        <dt>Joined</dt>
+        <dd>{{ user.createdAt | date:'mediumDate' }}</dd>
+      </div>
+    </dl>
+  </div>
+</section>

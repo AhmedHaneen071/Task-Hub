@@ -1,0 +1,69 @@
+<section class="page-header">
+  <div class="header-main">
+    <p class="eyebrow">Workspace</p>
+    <h1>Good day, {{ user?.fullName || 'User' }}</h1>
+  </div>
+  <div class="header-actions">
+    <a class="primary-button" routerLink="/projects">New Project</a>
+  </div>
+</section>
+
+<p class="form-error" *ngIf="errorMessage">{{ errorMessage }}</p>
+<div class="loading" *ngIf="loading">Loading workspace...</div>
+
+<ng-container *ngIf="data">
+  <section class="metric-grid">
+    <article class="metric-card" *ngFor="let metric of metrics">
+      <span>{{ metric.label }}</span>
+      <strong>{{ metric.value }}</strong>
+    </article>
+  </section>
+
+  <section class="dashboard-grid">
+    <div class="glass-card panel">
+      <div class="panel-header">
+        <h3>Priority Projects</h3>
+        <a class="text-link" routerLink="/projects">Browse all</a>
+      </div>
+      <div class="list-container">
+        <a class="project-item" *ngFor="let project of data.priorityProjects" [routerLink]="['/projects', project.id]">
+          <div class="item-meta">
+            <strong>{{ project.name }}</strong>
+            <p>{{ project.categoryName }}</p>
+          </div>
+          <span class="status-pill" [appStatusHighlight]="project.status">{{ project.status }}</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="glass-card panel">
+      <div class="panel-header">
+        <h3>Recent Activity</h3>
+      </div>
+      <div class="list-container">
+        <article class="activity-item" *ngFor="let activity of data.recentActivity">
+          <div class="activity-dot"></div>
+          <div class="item-content">
+            <p><strong>{{ activity.userName }}</strong> {{ activity.message }}</p>
+            <small>{{ activity.createdAt | date:'shortTime' }}</small>
+          </div>
+        </article>
+      </div>
+    </div>
+    
+    <div class="glass-card panel wide">
+      <div class="panel-header">
+        <h3>My Deliverables</h3>
+      </div>
+      <div class="deliverables-grid">
+        <article class="task-card" *ngFor="let task of data.myTasks">
+          <span class="status-pill small" [appStatusHighlight]="task.status">{{ task.status }}</span>
+          <strong>{{ task.title }}</strong>
+          <p>{{ task.projectName }}</p>
+        </article>
+      </div>
+    </div>
+
+    <app-dom-notes class="glass-card"></app-dom-notes>
+  </section>
+</ng-container>

@@ -1,0 +1,41 @@
+<div class="auth-wrapper">
+  <main class="glass-card auth-card">
+    <div class="auth-header">
+      <span class="eyebrow">Identity Protocol</span>
+      <h1>{{ mode === 'signup' ? 'Create Workspace' : 'Secure Entry' }}</h1>
+      <p class="text-dim">
+        {{ mode === 'signup' ? 'Join high-performance teams managing complexity with absolute precision.' : 'Authorize your session to access your private workspace.' }}
+      </p>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="auth-form-v2">
+      <p class="form-error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+      <div class="form-group" *ngIf="mode === 'signup'">
+        <label>Display Name</label>
+        <input type="text" formControlName="fullName" placeholder="e.g. Alex Rivera">
+      </div>
+
+      <div class="form-group">
+        <label>Email Identifier</label>
+        <input type="email" formControlName="email" placeholder="name@company.com">
+      </div>
+
+      <div class="form-group">
+        <label>Access Key</label>
+        <input type="password" formControlName="password" placeholder="••••••••">
+      </div>
+
+      <button class="primary-button full" type="submit" [disabled]="loading">
+        {{ loading ? 'Verifying...' : (mode === 'signup' ? 'Initialize Account' : 'Authenticate') }}
+      </button>
+
+      <div class="auth-footer">
+        <p class="text-dim">{{ mode === 'signup' ? 'Already configured?' : 'First time here?' }}</p>
+        <a class="text-link" [routerLink]="mode === 'signup' ? '/login' : '/signup'">
+          {{ mode === 'signup' ? 'Sign in' : 'Request access' }}
+        </a>
+      </div>
+    </form>
+  </main>
+</div>
