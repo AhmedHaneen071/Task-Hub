@@ -5,10 +5,10 @@
   </a>
 
   <nav class="nav-links">
-    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Overview</a>
-    <a *ngIf="user$ | async" routerLink="/dashboard" routerLinkActive="active">Workspace</a>
-    <a *ngIf="user$ | async" routerLink="/projects" routerLinkActive="active">Projects</a>
-    <a *ngIf="(user$ | async)?.role === 'Admin'" routerLink="/admin" routerLinkActive="active">Control</a>
+    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-item">Overview</a>
+    <a *ngIf="user$ | async" routerLink="/dashboard" routerLinkActive="active" class="nav-item">Workspace</a>
+    <a *ngIf="user$ | async" routerLink="/projects" routerLinkActive="active" class="nav-item">Projects</a>
+    <a *ngIf="(user$ | async)?.role === 'Admin'" routerLink="/admin" routerLinkActive="active" class="nav-item">Control</a>
   </nav>
 
   <div class="nav-actions">
