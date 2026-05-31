@@ -1,35 +1,74 @@
 # TaskHub | Developer's Guide
 
-TaskHub is a premium, full-stack project management platform built for high-performance teams. It features an elite dark glassmorphism UI, real-time activity tracking, and a zero-configuration backend.
+TaskHub is a full-stack project management platform built with Angular 18 and ASP.NET Core 8. It provides secure role-based authentication, project and task management, activity tracking, and a modern glassmorphism-inspired user interface.
+
+---
+
+## ✨ Features
+
+- 🔐 JWT Authentication
+- 👥 Role-Based Access Control (Admin/User)
+- 📁 Project Management
+- ✅ Task Management & Tracking
+- 📊 Dashboard Overview
+- 📝 Activity Tracking
+- 🌙 Modern Dark Glassmorphism UI
+- 📱 Fully Responsive Design
+- 📚 Swagger API Documentation
+- 🗄 SQLite Database (Zero Installation Required)
+
+---
 
 ## 🚀 Technology Stack
 
-- **Frontend:** Angular 18 (TypeScript), RxJS, Reactive Forms.
-- **Backend:** ASP.NET Core 8 Web API, Entity Framework Core.
-- **Database:** SQLite (Zero-install, file-based).
-- **Security:** JWT (JSON Web Tokens) with Role-Based Access Control (Admin/User).
+### Frontend
+- Angular 18
+- TypeScript
+- RxJS
+- Reactive Forms
+
+### Backend
+- ASP.NET Core 8 Web API
+- Entity Framework Core
+
+### Database
+- SQLite
+
+### Security
+- JWT (JSON Web Tokens)
+- Role-Based Authorization
 
 ---
 
 ## 🛠 Prerequisites
 
-Ensure you have the following installed on your development machine:
-1. **.NET 8 SDK** - [Download](https://dotnet.microsoft.com/download/dotnet/8.0)
-2. **Node.js (LTS)** - [Download](https://nodejs.org/)
-3. **Git** - [Download](https://git-scm.com/)
+Ensure the following tools are installed on your machine:
+
+1. **.NET 8 SDK**  
+   https://dotnet.microsoft.com/download/dotnet/8.0
+
+2. **Node.js (LTS Version)**  
+   https://nodejs.org
+
+3. **Git**  
+   https://git-scm.com
 
 ---
 
 ## 💻 Getting Started
 
 ### 1. Clone the Repository
+
 ```bash
-git clone <your-repository-url>
-cd TaskHub
+git clone https://github.com/AhmedHaneen071/Task-Hub.git
+cd Task-Hub
 ```
 
-### 2. Backend Setup (API)
-The backend handles the data logic and security. It is configured to automatically create and seed the SQLite database on the first run.
+---
+
+### 2. Backend Setup
+
+The backend automatically creates and seeds the SQLite database during the first run.
 
 ```bash
 cd backend
@@ -37,70 +76,195 @@ dotnet restore
 dotnet dev-certs https --trust
 dotnet run
 ```
-- **Listening on:** `https://localhost:7162`
-- **Database File:** `backend/TaskHub.db` (auto-generated)
-- **API Documentation:** [https://localhost:7162/swagger](https://localhost:7162/swagger)
 
-### 3. Frontend Setup (Web UI)
-The frontend provides the premium dark glassy interface.
+#### Backend Information
+
+| Item | Value |
+|--------|--------|
+| API URL | https://localhost:7162 |
+| Swagger UI | https://localhost:7162/swagger |
+| Database | SQLite |
+| Database File | backend/TaskHub.db |
+
+---
+
+### 3. Frontend Setup
+
+Open a new terminal:
 
 ```bash
 cd frontend
 npm install
 npm start
 ```
-- **URL:** [http://localhost:4200](http://localhost:4200)
+
+#### Frontend Information
+
+| Item | Value |
+|--------|--------|
+| Application URL | http://localhost:4200 |
 
 ---
 
-## 🔐 Authentication & Demo Data
+## 🔧 Configuration
 
-The system is pre-seeded with the following accounts for testing:
+The Angular application communicates with the ASP.NET Core API running on:
+
+```text
+https://localhost:7162
+```
+
+If the backend URL or port changes, update the API configuration in the Angular environment files.
+
+---
+
+## 🔐 Authentication & Demo Accounts
+
+The application is seeded with test accounts for development purposes.
 
 | Role | Email | Password |
-| :--- | :--- | :--- |
-| **Administrator** | `admin@taskhub.local` | `Admin123!` |
-| **Standard User** | `maya@taskhub.local` | `User123!` |
+|--------|--------|--------|
+| Administrator | admin@taskhub.local | Admin123! |
+| Standard User | maya@taskhub.local | User123! |
 
 ---
 
-## 🎨 UI Architecture
+## 🎨 User Interface
 
-The UI has been completely rebuilt with a **Premium Dark Glassmorphism** aesthetic:
-- **Glass Engine:** Uses `backdrop-filter: blur(24px)` and multi-layered semi-transparent surfaces.
-- **Atmosphere:** Fixed-position radial glows (`accent` and `violet`) provide depth.
-- **Typography:** Optimized Inter-stack with refined letter-spacing.
-- **Responsiveness:** Fully fluid layout for mobile, tablet, and desktop.
+TaskHub uses a modern glassmorphism-inspired design system featuring:
+
+- Frosted glass components
+- Soft transparency effects
+- Layered depth and shadows
+- Responsive layouts
+- Dark theme optimized for productivity
+- Consistent typography and spacing
 
 ---
 
 ## 📂 Project Structure
 
 ```text
-/
-├── backend/            # ASP.NET Core Web API
-│   ├── Controllers/    # API Endpoints (Auth, Projects, Tasks, etc.)
-│   ├── Data/           # EF Core Context & Automated Seeder
-│   ├── Models/         # Database Entities
-│   └── appsettings.json # Database and JWT Configuration
-├── frontend/           # Angular Application
-│   ├── src/app/pages/  # View Components (Dashboard, Admin, Auth, etc.)
-│   ├── src/app/core/   # Services, Guards, and API Interceptors
-│   └── src/styles.css  # Global Glassmorphism Engine
-└── TaskHub.db          # Local SQLite database (created after first run)
+Task-Hub/
+│
+├── backend/
+│   ├── Controllers/        # API Endpoints
+│   ├── Data/               # DbContext & Seeder
+│   ├── Models/             # Database Entities
+│   ├── Services/           # Business Logic
+│   ├── Program.cs
+│   └── appsettings.json
+│
+├── frontend/
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── core/       # Services, Guards, Interceptors
+│   │   │   ├── pages/      # Application Pages
+│   │   │   ├── shared/     # Shared Components
+│   │   │   └── models/     # Interfaces & Models
+│   │   └── styles.css
+│   │
+│   └── package.json
+│
+└── README.md
+```
+
+---
+
+## 📚 API Documentation
+
+After starting the backend, Swagger documentation is available at:
+
+```text
+https://localhost:7162/swagger
+```
+
+Swagger provides:
+
+- Endpoint testing
+- Request/response schemas
+- Authentication support
+- API documentation
+
+---
+
+## 🚀 Production Build
+
+### Backend
+
+```bash
+dotnet publish -c Release
+```
+
+Published files will be generated in:
+
+```text
+backend/bin/Release/
+```
+
+### Frontend
+
+```bash
+npm run build
+```
+
+Production build output:
+
+```text
+frontend/dist/
 ```
 
 ---
 
 ## ⚠️ Troubleshooting
 
-**1. "API server is not reachable"**
-- Ensure the backend terminal is still running.
-- Visit `https://localhost:7162/swagger` in your browser. If you see a privacy warning, click **Advanced -> Proceed to localhost**. This trusts the development certificate.
+### API Server Is Not Reachable
 
-**2. Database Issues**
-- If you need to reset the data, simply delete the `backend/TaskHub.db` file and restart the backend. It will recreate a fresh database.
+- Ensure the backend application is running.
+- Verify that `https://localhost:7162/swagger` opens successfully.
+- Accept the HTTPS development certificate if prompted.
+
+### Database Issues
+
+To reset the database:
+
+1. Stop the backend server.
+2. Delete:
+
+```text
+backend/TaskHub.db
+```
+
+3. Restart the backend.
+
+A fresh database will be created automatically.
+
+### Frontend Cannot Connect to API
+
+Verify:
+
+- Backend is running.
+- API URL configuration is correct.
+- Browser console contains no CORS-related errors.
 
 ---
 
-*TaskHub - Precision Project Management.*
+## 🤝 Contributing
+
+Contributions, bug reports, and feature suggestions are welcome.
+
+1. Fork the repository.
+2. Create a feature branch.
+3. Commit your changes.
+4. Push your branch.
+5. Open a Pull Request.
+
+---
+
+## 📄 License
+
+This project is intended for educational and portfolio purposes.
+
+---
+
+**TaskHub** — A modern project management platform built with Angular and ASP.NET Core.
