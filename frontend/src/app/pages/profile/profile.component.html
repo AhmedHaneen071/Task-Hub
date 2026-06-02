@@ -30,4 +30,18 @@
       </div>
     </dl>
   </div>
+
+  <div class="glass-card panel profile-projects">
+    <h3>Owned Projects ({{ projects.length }})</h3>
+    <div class="list-container mt-24">
+      <a class="project-item" *ngFor="let project of projects" [routerLink]="['/projects', project.id]">
+        <div class="item-meta">
+          <strong>{{ project.name }}</strong>
+          <p>{{ project.categoryName }}</p>
+        </div>
+        <span class="status-pill" [appStatusHighlight]="project.status">{{ project.status }}</span>
+      </a>
+      <p class="empty-notif" *ngIf="projects.length === 0">No projects owned by this user.</p>
+    </div>
+  </div>
 </section>

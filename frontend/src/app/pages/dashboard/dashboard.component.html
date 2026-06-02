@@ -22,6 +22,28 @@
   <section class="dashboard-grid">
     <div class="glass-card panel">
       <div class="panel-header">
+        <h3>Task Distribution</h3>
+      </div>
+      <div class="chart-container" *ngIf="taskDistributionRows.length > 0; else emptyDistribution">
+        <div class="distribution-bars">
+          <div class="dist-row" *ngFor="let row of taskDistributionRows">
+            <div class="dist-info">
+              <span>{{ row.label }}</span>
+              <strong>{{ row.count }}</strong>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width.%]="row.percent" [style.background]="row.color"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <ng-template #emptyDistribution>
+        <p class="empty-notif">No tasks tracked yet.</p>
+      </ng-template>
+    </div>
+
+    <div class="glass-card panel">
+      <div class="panel-header">
         <h3>Priority Projects</h3>
         <a class="text-link" routerLink="/projects">Browse all</a>
       </div>
@@ -41,8 +63,10 @@
         <h3>Recent Activity</h3>
       </div>
       <div class="list-container">
-        <article class="activity-item" *ngFor="let activity of data.recentActivity">
-          <div class="activity-dot"></div>
+        <article class="activity-item-v2" *ngFor="let activity of data.recentActivity">
+          <div class="user-avatar-sm" [style.backgroundImage]="activity.userAvatarUrl ? 'url(' + activity.userAvatarUrl + ')' : null">
+            <span *ngIf="!activity.userAvatarUrl">{{ activity.userName.charAt(0) }}</span>
+          </div>
           <div class="item-content">
             <p><strong>{{ activity.userName }}</strong> {{ activity.message }}</p>
             <small>{{ activity.createdAt | date:'shortTime' }}</small>

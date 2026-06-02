@@ -11,6 +11,16 @@
       <span class="eyebrow">{{ project.category.name }}</span>
       <h1>{{ project.name }}</h1>
       <p class="header-desc">{{ project.description }}</p>
+      
+      <div class="project-progress-wide mt-24">
+        <div class="progress-info">
+          <span>Project Completion</span>
+          <strong>{{ completion }}%</strong>
+        </div>
+        <div class="progress-bar lg">
+          <div class="progress-fill" [style.width.%]="completion"></div>
+        </div>
+      </div>
     </div>
     <div class="header-right">
       <div class="meta-cluster">
@@ -37,11 +47,21 @@
         <form [formGroup]="taskForm" (ngSubmit)="submitTask()">
           <div class="form-group">
             <label>Task Title</label>
-            <input type="text" formControlName="title" placeholder="What needs doing?">
+            <input
+              type="text"
+              formControlName="title"
+              placeholder="What needs doing?"
+              [class.invalid]="hasTaskFieldError('title')">
+            <p class="field-error" *ngIf="taskFieldError('title', 'Task title') as message">{{ message }}</p>
           </div>
           <div class="form-group">
             <label>Description</label>
-            <textarea rows="3" formControlName="description" placeholder="Details..."></textarea>
+            <textarea
+              rows="3"
+              formControlName="description"
+              placeholder="Details..."
+              [class.invalid]="hasTaskFieldError('description')"></textarea>
+            <p class="field-error" *ngIf="taskFieldError('description', 'Description') as message">{{ message }}</p>
           </div>
           <div class="form-row">
             <div class="form-group">
@@ -74,7 +94,10 @@
       <div class="glass-card panel mt-24">
         <h3>Activity Stream</h3>
         <div class="activity-feed">
-          <article class="activity-item" *ngFor="let activity of project.activities">
+          <article class="activity-item-v2" *ngFor="let activity of project.activities">
+            <div class="user-avatar-sm" [style.backgroundImage]="activity.userAvatarUrl ? 'url(' + activity.userAvatarUrl + ')' : null">
+              <span *ngIf="!activity.userAvatarUrl">{{ activity.userName.charAt(0) }}</span>
+            </div>
             <div class="item-content">
               <p><strong>{{ activity.userName }}</strong> {{ activity.message }}</p>
               <small>{{ activity.createdAt | date:'MMM d, h:mm a' }}</small>
@@ -128,7 +151,12 @@
             </div>
 
             <form [formGroup]="commentForm" (ngSubmit)="submitComment()" class="comment-form">
-              <textarea rows="2" formControlName="message" placeholder="Write a comment..."></textarea>
+              <textarea
+                rows="2"
+                formControlName="message"
+                placeholder="Write a comment..."
+                [class.invalid]="hasCommentFieldError('message')"></textarea>
+              <p class="field-error" *ngIf="commentFieldError('message', 'Comment') as message">{{ message }}</p>
               <div class="form-actions">
                 <button class="primary-button sm" type="submit" [disabled]="savingComment">Post</button>
               </div>
@@ -136,6 +164,9 @@
 
             <div class="comments-list">
               <article class="comment-row-v2" *ngFor="let comment of comments">
+                <div class="user-avatar-sm" [style.backgroundImage]="comment.authorAvatarUrl ? 'url(' + comment.authorAvatarUrl + ')' : null">
+                  <span *ngIf="!comment.authorAvatarUrl">{{ comment.authorName.charAt(0) }}</span>
+                </div>
                 <div class="comment-body">
                   <div class="comment-meta">
                     <strong>{{ comment.authorName }}</strong>
@@ -143,7 +174,7 @@
                   </div>
                   <p>{{ comment.message }}</p>
                 </div>
-                <button class="icon-button sm danger" (click)="deleteComment(comment)">
+                <button class="icon-button sm danger" (click)="deleteComment(comment)" *ngIf="currentUser?.id === comment.authorId || currentUser?.role === 'Admin'">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                 </button>
               </article>

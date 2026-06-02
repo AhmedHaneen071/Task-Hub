@@ -55,6 +55,7 @@ export interface ActivityItem {
   message: string;
   createdAt: string;
   userName: string;
+  userAvatarUrl: string | null;
 }
 
 export interface ProjectDetail {
@@ -93,6 +94,7 @@ export interface CommentItem {
   taskTitle: string;
   authorId: number;
   authorName: string;
+  authorAvatarUrl: string | null;
 }
 
 export interface CreateCategoryRequest {
@@ -141,6 +143,12 @@ export interface DashboardData {
   activeProjects: number;
   openTasks: number;
   completedTasks: number;
+  statusDistribution: {
+    toDo: number;
+    inProgress: number;
+    review: number;
+    done: number;
+  };
   priorityProjects: Project[];
   myTasks: TaskItem[];
   recentActivity: ActivityItem[];

@@ -13,12 +13,22 @@
     <form [formGroup]="projectForm" (ngSubmit)="submitProject()">
       <div class="form-group">
         <label>Project Name</label>
-        <input type="text" formControlName="name" placeholder="Enter name">
+        <input
+          type="text"
+          formControlName="name"
+          placeholder="Enter name"
+          [class.invalid]="hasFieldError('name')">
+        <p class="field-error" *ngIf="fieldError('name', 'Project name') as message">{{ message }}</p>
       </div>
 
       <div class="form-group">
         <label>Description</label>
-        <textarea rows="4" formControlName="description" placeholder="Project goals..."></textarea>
+        <textarea
+          rows="4"
+          formControlName="description"
+          placeholder="Project goals..."
+          [class.invalid]="hasFieldError('description')"></textarea>
+        <p class="field-error" *ngIf="fieldError('description', 'Description') as message">{{ message }}</p>
       </div>
 
       <div class="form-row">
@@ -39,9 +49,10 @@
       <div class="form-row">
         <div class="form-group">
           <label>Category</label>
-          <select formControlName="categoryId">
+          <select formControlName="categoryId" [class.invalid]="hasFieldError('categoryId')">
             <option *ngFor="let category of categories" [ngValue]="category.id">{{ category.name }}</option>
           </select>
+          <p class="field-error" *ngIf="fieldError('categoryId', 'Category') as message">{{ message }}</p>
         </div>
         <div class="form-group">
           <label>Due Date</label>
@@ -88,6 +99,12 @@
           <div class="card-content">
             <h3><a [routerLink]="['/projects', project.id]">{{ project.name }}</a></h3>
             <p>{{ project.categoryName }} &middot; Owned by {{ project.ownerName }}</p>
+            <div class="project-progress mt-8">
+              <div class="progress-bar">
+                <div class="progress-fill" [style.width.%]="completion(project)"></div>
+              </div>
+              <small>{{ completion(project) }}% complete &middot; {{ project.completedTaskCount }}/{{ project.taskCount }} tasks</small>
+            </div>
           </div>
         </div>
         

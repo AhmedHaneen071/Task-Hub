@@ -1,5 +1,4 @@
 import { CommonModule } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -13,16 +12,21 @@ import {
   ProjectStatusName,
   ProjectStatusValue
 } from '../../core/models/project.models';
+import { ApiErrorService } from '../../core/services/api-error.service';
 import { AuthService } from '../../core/services/auth.service';
 import { CategoryService } from '../../core/services/category.service';
 import { ProjectService } from '../../core/services/project.service';
 import { UserService } from '../../core/services/user.service';
+import { ValidationMessageService } from '../../core/services/validation-message.service';
 import { StatusHighlightDirective } from '../../shared/directives/status-highlight.directive';
+import { trimmedMaxLength, trimmedMinLength, trimmedRequired } from '../../shared/validators/form.validators';
 
 interface SelectOption<T> {
   label: string;
   value: T;
 }
+
+type ProjectControlName = 'name' | 'description' | 'categoryId';
 
 @Component({
   selector: 'app-projects',
@@ -49,13 +53,13 @@ export class ProjectsComponent implements OnInit {
   ];
 
   readonly filterForm = this.fb.group({
-    search: [''],
+    search: ['', [trimmedMaxLength(120)]],
     status: ['All']
   });
 
   readonly projectForm = this.fb.group({
-    name: ['', [Validators.required, Validators.minLength(2)]],
-    description: ['', [Validators.required, Validators.minLength(10)]],
+    name: ['', [trimmedRequired, trimmedMinLength(2), trimmedMaxLength(140)]],
+    description: ['', [trimmedRequired, trimmedMinLength(10), trimmedMaxLength(1000)]],
     status: [ProjectStatusValue.Active, [Validators.required]],
     priority: [ProjectPriorityValue.Medium, [Validators.required]],
     dueDate: [''],
@@ -77,7 +81,9 @@ export class ProjectsComponent implements OnInit {
     private readonly projectService: ProjectService,
     private readonly categoryService: CategoryService,
     private readonly userService: UserService,
-    private readonly auth: AuthService
+    private readonly auth: AuthService,
+    private readonly apiErrors: ApiErrorService,
+    private readonly validationMessages: ValidationMessageService
   ) {}
 
   get filteredProjects(): Project[] {
@@ -104,28 +110,44 @@ export class ProjectsComponent implements OnInit {
   }
 
   submitProject(): void {
-    this.projectForm.markAllAsTouched();
-    if (this.projectForm.invalid || this.saving) {
-      return;
-    }
-
-    this.saving = true;
-    const request = this.buildProjectRequest();
-    const operation$ = this.editingProject
-      ? this.projectService.updateProject(this.editingProject.id, request)
-      : this.projectService.createProject(request);
-
-    operation$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => {
-        this.saving = false;
-        this.resetForm();
-        this.loadProjects();
-      },
-      error: (error: HttpErrorResponse) => {
-        this.saving = false;
-        this.errorMessage = this.extractError(error, 'Project could not be saved.');
+    try {
+      this.projectForm.markAllAsTouched();
+      if (this.projectForm.invalid || this.saving) {
+        this.errorMessage = 'Please correct the highlighted project fields before saving.';
+        return;
       }
-    });
+
+      this.saving = true;
+      this.errorMessage = '';
+      const request = this.buildProjectRequest();
+      const operation$ = this.editingProject
+        ? this.projectService.updateProject(this.editingProject.id, request)
+        : this.projectService.createProject(request);
+
+      operation$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: () => {
+          this.saving = false;
+          this.resetForm();
+          this.loadProjects();
+        },
+        error: (error: unknown) => {
+          this.saving = false;
+          this.handleError(error, 'Project could not be saved.');
+        }
+      });
+    } catch (error: unknown) {
+      this.saving = false;
+      this.handleError(error, 'Project could not be saved.');
+    }
+  }
+
+  fieldError(controlName: ProjectControlName, label: string): string {
+    return this.validationMessages.controlError(this.projectForm.controls[controlName], label);
+  }
+
+  hasFieldError(controlName: ProjectControlName): boolean {
+    const control = this.projectForm.controls[controlName];
+    return control.invalid && (control.touched || control.dirty);
   }
 
   editProject(project: Project): void {
@@ -139,6 +161,7 @@ export class ProjectsComponent implements OnInit {
       categoryId: project.categoryId,
       ownerId: project.ownerId
     });
+    this.errorMessage = '';
   }
 
   resetForm(): void {
@@ -152,20 +175,25 @@ export class ProjectsComponent implements OnInit {
       categoryId: this.categories[0]?.id ?? 0,
       ownerId: this.auth.currentUserValue?.id ?? 0
     });
+    this.errorMessage = '';
   }
 
   deleteProject(project: Project): void {
-    const confirmed = window.confirm(`Delete project "${project.name}"?`);
-    if (!confirmed) {
-      return;
-    }
-
-    this.projectService.deleteProject(project.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => this.loadProjects(),
-      error: (error: HttpErrorResponse) => {
-        this.errorMessage = this.extractError(error, 'Project could not be deleted.');
+    try {
+      const confirmed = window.confirm(`Delete project "${project.name}"?`);
+      if (!confirmed) {
+        return;
       }
-    });
+
+      this.projectService.deleteProject(project.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: () => this.loadProjects(),
+        error: (error: unknown) => {
+          this.handleError(error, 'Project could not be deleted.');
+        }
+      });
+    } catch (error: unknown) {
+      this.handleError(error, 'Project could not be deleted.');
+    }
   }
 
   completion(project: Project): number {
@@ -175,44 +203,57 @@ export class ProjectsComponent implements OnInit {
   }
 
   private loadProjects(): void {
-    this.loading = true;
-    this.projectService.getProjects().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (projects) => {
-        this.projects = projects;
-        this.loading = false;
-      },
-      error: (error: HttpErrorResponse) => {
-        this.loading = false;
-        this.errorMessage = this.extractError(error, 'Projects could not be loaded.');
-      }
-    });
+    try {
+      this.loading = true;
+      this.projectService.getProjects().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (projects) => {
+          this.projects = projects;
+          this.loading = false;
+        },
+        error: (error: unknown) => {
+          this.loading = false;
+          this.handleError(error, 'Projects could not be loaded.');
+        }
+      });
+    } catch (error: unknown) {
+      this.loading = false;
+      this.handleError(error, 'Projects could not be loaded.');
+    }
   }
 
   private loadCategories(): void {
-    this.categoryService.getCategories().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (categories) => {
-        this.categories = categories;
-        if (categories.length > 0 && this.projectForm.controls.categoryId.value === 0) {
-          this.projectForm.controls.categoryId.setValue(categories[0].id);
+    try {
+      this.categoryService.getCategories().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (categories) => {
+          this.categories = categories;
+          if (categories.length > 0 && this.projectForm.controls.categoryId.value === 0) {
+            this.projectForm.controls.categoryId.setValue(categories[0].id);
+          }
+        },
+        error: (error: unknown) => {
+          this.handleError(error, 'Categories could not be loaded.');
         }
-      },
-      error: (error: HttpErrorResponse) => {
-        this.errorMessage = this.extractError(error, 'Categories could not be loaded.');
-      }
-    });
+      });
+    } catch (error: unknown) {
+      this.handleError(error, 'Categories could not be loaded.');
+    }
   }
 
   private loadOwners(): void {
-    this.userService.getUsers().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (users) => {
-        this.owners = users.filter((user) => user.isActive);
-        const currentUserId = this.auth.currentUserValue?.id ?? 0;
-        this.projectForm.controls.ownerId.setValue(currentUserId);
-      },
-      error: (error: HttpErrorResponse) => {
-        this.errorMessage = this.extractError(error, 'Users could not be loaded.');
-      }
-    });
+    try {
+      this.userService.getUsers().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (users) => {
+          this.owners = users.filter((user) => user.isActive);
+          const currentUserId = this.auth.currentUserValue?.id ?? 0;
+          this.projectForm.controls.ownerId.setValue(currentUserId);
+        },
+        error: (error: unknown) => {
+          this.handleError(error, 'Users could not be loaded.');
+        }
+      });
+    } catch (error: unknown) {
+      this.handleError(error, 'Users could not be loaded.');
+    }
   }
 
   private buildProjectRequest(): CreateProjectRequest {
@@ -228,13 +269,7 @@ export class ProjectsComponent implements OnInit {
     };
   }
 
-  private extractError(error: HttpErrorResponse, fallback: string): string {
-    if (error.status === 0) {
-      return 'The API server is not reachable. Please ensure the backend is running.';
-    }
-    if (typeof error.error?.message === 'string') {
-      return error.error.message;
-    }
-    return fallback;
+  private handleError(error: unknown, fallback: string): void {
+    this.errorMessage = this.apiErrors.toMessage(error, fallback);
   }
 }

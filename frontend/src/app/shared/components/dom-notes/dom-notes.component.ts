@@ -25,6 +25,7 @@ export class DomNotesComponent implements AfterViewInit, OnDestroy {
     input.maxLength = 80;
     button.type = 'submit';
     button.textContent = 'Add';
+    button.className = 'secondary-button btn-sm';
     counter.textContent = '0/80';
     list.className = 'note-list';
 
@@ -39,6 +40,7 @@ export class DomNotesComponent implements AfterViewInit, OnDestroy {
       text.textContent = message;
       remove.type = 'button';
       remove.textContent = 'Remove';
+      remove.className = 'btn-danger-soft';
       remove.addEventListener('click', () => item.remove());
 
       item.append(text, remove);

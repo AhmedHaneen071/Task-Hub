@@ -6,8 +6,14 @@
     manage tasks, and ship faster with absolute clarity.
   </p>
   <div class="hero-actions">
-    <a class="primary-button" routerLink="/signup">Join TaskHub</a>
-    <a class="secondary-button" routerLink="/login">Sign In</a>
+    <ng-container *ngIf="user$ | async as user; else guestHeroActions">
+      <a class="primary-button" routerLink="/dashboard">Open Workspace</a>
+      <a class="secondary-button" [routerLink]="['/profile', user.id]">View Profile</a>
+    </ng-container>
+    <ng-template #guestHeroActions>
+      <a class="primary-button" routerLink="/signup">Join TaskHub</a>
+      <a class="secondary-button" routerLink="/login">Sign In</a>
+    </ng-template>
   </div>
 </section>
 

@@ -13,17 +13,46 @@
 
       <div class="form-group" *ngIf="mode === 'signup'">
         <label>Display Name</label>
-        <input type="text" formControlName="fullName" placeholder="e.g. Alex Rivera">
+        <input
+          type="text"
+          formControlName="fullName"
+          placeholder="e.g. Alex Rivera"
+          autocomplete="name"
+          [class.invalid]="hasFieldError('fullName')">
+        <p class="field-error" *ngIf="fieldError('fullName', 'Display name') as message">{{ message }}</p>
       </div>
 
       <div class="form-group">
         <label>Email Identifier</label>
-        <input type="email" formControlName="email" placeholder="name@company.com">
+        <input
+          type="email"
+          formControlName="email"
+          placeholder="name@company.com"
+          autocomplete="email"
+          [class.invalid]="hasFieldError('email')">
+        <p class="field-error" *ngIf="fieldError('email', 'Email identifier') as message">{{ message }}</p>
       </div>
 
       <div class="form-group">
         <label>Access Key</label>
-        <input type="password" formControlName="password" placeholder="••••••••">
+        <input
+          type="password"
+          formControlName="password"
+          placeholder="********"
+          [autocomplete]="mode === 'signup' ? 'new-password' : 'current-password'"
+          [class.invalid]="hasFieldError('password')">
+        <p class="field-error" *ngIf="fieldError('password', 'Access key') as message">{{ message }}</p>
+      </div>
+
+      <div class="form-group" *ngIf="mode === 'signup'">
+        <label>Confirm Access Key</label>
+        <input
+          type="password"
+          formControlName="confirmPassword"
+          placeholder="********"
+          autocomplete="new-password"
+          [class.invalid]="hasConfirmPasswordError()">
+        <p class="field-error" *ngIf="confirmPasswordError() as message">{{ message }}</p>
       </div>
 
       <button class="primary-button full" type="submit" [disabled]="loading">

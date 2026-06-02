@@ -66,12 +66,14 @@ public abstract class ApiControllerBase : ControllerBase
             comment.TaskId,
             comment.Task?.Title ?? "Unknown task",
             comment.AuthorId,
-            comment.Author?.FullName ?? "Unknown user");
+            comment.Author?.FullName ?? "Unknown user",
+            comment.Author?.AvatarUrl);
 
     protected static ActivityDto ToDto(ActivityLog activity) =>
         new(
             activity.Id,
             activity.Message,
             activity.CreatedAt,
-            activity.User?.FullName ?? "Unknown user");
+            activity.User?.FullName ?? "Unknown user",
+            activity.User?.AvatarUrl);
 }

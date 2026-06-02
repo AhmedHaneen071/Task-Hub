@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { adminGuard } from './core/guards/admin.guard';
 import { authGuard } from './core/guards/auth.guard';
+import { guestGuard } from './core/guards/guest.guard';
 import { AdminComponent } from './pages/admin/admin.component';
 import { AuthComponent } from './pages/auth/auth.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
@@ -11,8 +12,8 @@ import { ProjectsComponent } from './pages/projects/projects.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
-  { path: 'login', component: AuthComponent, data: { mode: 'login' } },
-  { path: 'signup', component: AuthComponent, data: { mode: 'signup' } },
+  { path: 'login', component: AuthComponent, canActivate: [guestGuard], data: { mode: 'login' } },
+  { path: 'signup', component: AuthComponent, canActivate: [guestGuard], data: { mode: 'signup' } },
   { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
   { path: 'projects', component: ProjectsComponent, canActivate: [authGuard] },
   { path: 'projects/:id', component: ProjectDetailComponent, canActivate: [authGuard] },

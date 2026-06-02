@@ -59,4 +59,4 @@ public sealed class UpdateProjectRequest : CreateProjectRequest
 {
 }
 
-public sealed record ActivityDto(int Id, string Message, DateTime CreatedAt, string UserName);
+public sealed record ActivityDto(int Id, string Message, DateTime CreatedAt, string UserName, string? UserAvatarUrl);

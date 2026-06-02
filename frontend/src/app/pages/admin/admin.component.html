@@ -73,11 +73,27 @@
           <form [formGroup]="userForm" (ngSubmit)="submitUser()">
             <div class="form-group">
               <label>Full Name</label>
-              <input type="text" formControlName="fullName">
+              <input type="text" formControlName="fullName" [class.invalid]="hasUserFieldError('fullName')">
+              <p class="field-error" *ngIf="userFieldError('fullName', 'Full name') as message">{{ message }}</p>
             </div>
             <div class="form-group">
               <label>Email Address</label>
-              <input type="email" formControlName="email">
+              <input type="email" formControlName="email" [class.invalid]="hasUserFieldError('email')">
+              <p class="field-error" *ngIf="userFieldError('email', 'Email address') as message">{{ message }}</p>
+            </div>
+            <div class="form-group" *ngIf="!editingUser">
+              <label>Password</label>
+              <input
+                type="password"
+                formControlName="password"
+                autocomplete="new-password"
+                [class.invalid]="hasUserFieldError('password')">
+              <p class="field-error" *ngIf="userFieldError('password', 'Password') as message">{{ message }}</p>
+            </div>
+            <div class="form-group">
+              <label>Avatar URL</label>
+              <input type="url" formControlName="avatarUrl" [class.invalid]="hasUserFieldError('avatarUrl')">
+              <p class="field-error" *ngIf="userFieldError('avatarUrl', 'Avatar URL') as message">{{ message }}</p>
             </div>
             <div class="form-row">
               <div class="form-group">
@@ -145,15 +161,25 @@
           <form [formGroup]="categoryForm" (ngSubmit)="submitCategory()">
             <div class="form-group">
               <label>Category Name</label>
-              <input type="text" formControlName="name">
+              <input type="text" formControlName="name" [class.invalid]="hasCategoryFieldError('name')">
+              <p class="field-error" *ngIf="categoryFieldError('name', 'Category name') as message">{{ message }}</p>
             </div>
             <div class="form-group">
               <label>Theme Color</label>
-              <input type="color" formControlName="color" class="color-input">
+              <input
+                type="color"
+                formControlName="color"
+                class="color-input"
+                [class.invalid]="hasCategoryFieldError('color')">
+              <p class="field-error" *ngIf="categoryFieldError('color', 'Theme color') as message">{{ message }}</p>
             </div>
             <div class="form-group">
               <label>Description</label>
-              <textarea rows="3" formControlName="description"></textarea>
+              <textarea
+                rows="3"
+                formControlName="description"
+                [class.invalid]="hasCategoryFieldError('description')"></textarea>
+              <p class="field-error" *ngIf="categoryFieldError('description', 'Description') as message">{{ message }}</p>
             </div>
             <div class="action-row">
               <button class="primary-button full" type="submit" [disabled]="saving">

@@ -9,7 +9,8 @@ public sealed record CommentDto(
     int TaskId,
     string TaskTitle,
     int AuthorId,
-    string AuthorName);
+    string AuthorName,
+    string? AuthorAvatarUrl);
 
 public sealed class CreateCommentRequest
 {

@@ -1,15 +1,25 @@
 import { CommonModule } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { User } from '../../core/models/auth.models';
 import { Category, CreateCategoryRequest } from '../../core/models/project.models';
+import { ApiErrorService } from '../../core/services/api-error.service';
 import { CategoryService } from '../../core/services/category.service';
 import { UserService } from '../../core/services/user.service';
+import { ValidationMessageService } from '../../core/services/validation-message.service';
+import {
+  optionalUrl,
+  trimmedEmail,
+  trimmedMaxLength,
+  trimmedMinLength,
+  trimmedRequired
+} from '../../shared/validators/form.validators';
 
 type AdminTab = 'users' | 'categories';
 type RoleOption = 'Admin' | 'User';
+type UserControlName = 'fullName' | 'email' | 'password' | 'avatarUrl';
+type CategoryControlName = 'name' | 'color' | 'description';
 
 interface AdminMetric {
   label: string;
@@ -42,18 +52,18 @@ export class AdminComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly userForm = this.fb.group({
-    fullName: ['', [Validators.required, Validators.minLength(2)]],
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(8)]],
+    fullName: ['', [trimmedRequired, trimmedMinLength(2), trimmedMaxLength(120)]],
+    email: ['', [trimmedRequired, trimmedEmail, trimmedMaxLength(180)]],
+    password: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(100)]],
     role: ['User' as RoleOption, [Validators.required]],
-    avatarUrl: [''],
+    avatarUrl: ['', [optionalUrl]],
     isActive: [true]
   });
 
   readonly categoryForm = this.fb.group({
-    name: ['', [Validators.required, Validators.minLength(2)]],
+    name: ['', [trimmedRequired, trimmedMinLength(2), trimmedMaxLength(80)]],
     color: ['#2563eb', [Validators.required, Validators.pattern(/^#[0-9a-fA-F]{6}$/)]],
-    description: ['']
+    description: ['', [trimmedMaxLength(300)]]
   });
 
   activeTab: AdminTab = 'users';
@@ -69,7 +79,9 @@ export class AdminComponent implements OnInit {
 
   constructor(
     private readonly userService: UserService,
-    private readonly categoryService: CategoryService
+    private readonly categoryService: CategoryService,
+    private readonly apiErrors: ApiErrorService,
+    private readonly validationMessages: ValidationMessageService
   ) {}
 
   ngOnInit(): void {
@@ -169,39 +181,64 @@ export class AdminComponent implements OnInit {
   }
 
   submitUser(): void {
-    this.userForm.markAllAsTouched();
-    if (this.userForm.invalid || this.saving) {
-      return;
-    }
-
-    this.saving = true;
-    const value = this.userForm.getRawValue();
-    const operation$ = this.editingUser
-      ? this.userService.updateUser(this.editingUser.id, {
-          fullName: value.fullName.trim(),
-          role: value.role,
-          avatarUrl: value.avatarUrl.trim() || null,
-          isActive: value.isActive
-        })
-      : this.userService.createUser({
-          fullName: value.fullName.trim(),
-          email: value.email.trim(),
-          password: value.password,
-          role: value.role,
-          avatarUrl: value.avatarUrl.trim() || null
-        });
-
-    operation$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => {
-        this.saving = false;
-        this.resetUserForm();
-        this.loadUsers();
-      },
-      error: (error: HttpErrorResponse) => {
-        this.saving = false;
-        this.errorMessage = this.extractError(error, 'User could not be saved.');
+    try {
+      this.userForm.markAllAsTouched();
+      if (this.userForm.invalid || this.saving) {
+        this.errorMessage = 'Please correct the highlighted user fields before saving.';
+        return;
       }
-    });
+
+      this.saving = true;
+      this.errorMessage = '';
+      const value = this.userForm.getRawValue();
+      const operation$ = this.editingUser
+        ? this.userService.updateUser(this.editingUser.id, {
+            fullName: value.fullName.trim(),
+            role: value.role,
+            avatarUrl: value.avatarUrl.trim() || null,
+            isActive: value.isActive
+          })
+        : this.userService.createUser({
+            fullName: value.fullName.trim(),
+            email: value.email.trim(),
+            password: value.password,
+            role: value.role,
+            avatarUrl: value.avatarUrl.trim() || null
+          });
+
+      operation$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: () => {
+          this.saving = false;
+          this.resetUserForm();
+          this.loadUsers();
+        },
+        error: (error: unknown) => {
+          this.saving = false;
+          this.handleError(error, 'User could not be saved.');
+        }
+      });
+    } catch (error: unknown) {
+      this.saving = false;
+      this.handleError(error, 'User could not be saved.');
+    }
+  }
+
+  userFieldError(controlName: UserControlName, label: string): string {
+    return this.validationMessages.controlError(this.userForm.controls[controlName], label);
+  }
+
+  hasUserFieldError(controlName: UserControlName): boolean {
+    const control = this.userForm.controls[controlName];
+    return control.invalid && (control.touched || control.dirty);
+  }
+
+  categoryFieldError(controlName: CategoryControlName, label: string): string {
+    return this.validationMessages.controlError(this.categoryForm.controls[controlName], label);
+  }
+
+  hasCategoryFieldError(controlName: CategoryControlName): boolean {
+    const control = this.categoryForm.controls[controlName];
+    return control.invalid && (control.touched || control.dirty);
   }
 
   editUser(user: User): void {
@@ -209,13 +246,14 @@ export class AdminComponent implements OnInit {
     this.userForm.patchValue({
       fullName: user.fullName,
       email: user.email,
-      password: 'Password1!',
+      password: '',
       role: user.role,
       avatarUrl: user.avatarUrl ?? '',
       isActive: user.isActive
     });
     this.userForm.controls.email.disable();
     this.userForm.controls.password.disable();
+    this.errorMessage = '';
   }
 
   resetUserForm(): void {
@@ -230,44 +268,56 @@ export class AdminComponent implements OnInit {
     });
     this.userForm.controls.email.enable();
     this.userForm.controls.password.enable();
+    this.errorMessage = '';
   }
 
   deleteUser(user: User): void {
-    if (!window.confirm(`Delete or deactivate "${user.fullName}"?`)) {
-      return;
-    }
-
-    this.userService.deleteUser(user.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => this.loadUsers(),
-      error: (error: HttpErrorResponse) => {
-        this.errorMessage = this.extractError(error, 'User could not be deleted.');
+    try {
+      if (!window.confirm(`Delete or deactivate "${user.fullName}"?`)) {
+        return;
       }
-    });
+
+      this.userService.deleteUser(user.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: () => this.loadUsers(),
+        error: (error: unknown) => {
+          this.handleError(error, 'User could not be deleted.');
+        }
+      });
+    } catch (error: unknown) {
+      this.handleError(error, 'User could not be deleted.');
+    }
   }
 
   submitCategory(): void {
-    this.categoryForm.markAllAsTouched();
-    if (this.categoryForm.invalid || this.saving) {
-      return;
-    }
-
-    this.saving = true;
-    const request = this.buildCategoryRequest();
-    const operation$ = this.editingCategory
-      ? this.categoryService.updateCategory(this.editingCategory.id, request)
-      : this.categoryService.createCategory(request);
-
-    operation$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => {
-        this.saving = false;
-        this.resetCategoryForm();
-        this.loadCategories();
-      },
-      error: (error: HttpErrorResponse) => {
-        this.saving = false;
-        this.errorMessage = this.extractError(error, 'Category could not be saved.');
+    try {
+      this.categoryForm.markAllAsTouched();
+      if (this.categoryForm.invalid || this.saving) {
+        this.errorMessage = 'Please correct the highlighted category fields before saving.';
+        return;
       }
-    });
+
+      this.saving = true;
+      this.errorMessage = '';
+      const request = this.buildCategoryRequest();
+      const operation$ = this.editingCategory
+        ? this.categoryService.updateCategory(this.editingCategory.id, request)
+        : this.categoryService.createCategory(request);
+
+      operation$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: () => {
+          this.saving = false;
+          this.resetCategoryForm();
+          this.loadCategories();
+        },
+        error: (error: unknown) => {
+          this.saving = false;
+          this.handleError(error, 'Category could not be saved.');
+        }
+      });
+    } catch (error: unknown) {
+      this.saving = false;
+      this.handleError(error, 'Category could not be saved.');
+    }
   }
 
   editCategory(category: Category): void {
@@ -277,6 +327,7 @@ export class AdminComponent implements OnInit {
       color: category.color,
       description: category.description ?? ''
     });
+    this.errorMessage = '';
   }
 
   resetCategoryForm(): void {
@@ -286,44 +337,58 @@ export class AdminComponent implements OnInit {
       color: '#2563eb',
       description: ''
     });
+    this.errorMessage = '';
   }
 
   deleteCategory(category: Category): void {
-    if (!window.confirm(`Delete category "${category.name}"?`)) {
-      return;
-    }
-
-    this.categoryService.deleteCategory(category.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => this.loadCategories(),
-      error: (error: HttpErrorResponse) => {
-        this.errorMessage = this.extractError(error, 'Category could not be deleted.');
+    try {
+      if (!window.confirm(`Delete category "${category.name}"?`)) {
+        return;
       }
-    });
+
+      this.categoryService.deleteCategory(category.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: () => this.loadCategories(),
+        error: (error: unknown) => {
+          this.handleError(error, 'Category could not be deleted.');
+        }
+      });
+    } catch (error: unknown) {
+      this.handleError(error, 'Category could not be deleted.');
+    }
   }
 
   private loadUsers(): void {
-    this.loading = true;
-    this.userService.getUsers().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (users) => {
-        this.users = users;
-        this.loading = false;
-      },
-      error: (error: HttpErrorResponse) => {
-        this.loading = false;
-        this.errorMessage = this.extractError(error, 'Users could not be loaded.');
-      }
-    });
+    try {
+      this.loading = true;
+      this.userService.getUsers().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (users) => {
+          this.users = users;
+          this.loading = false;
+        },
+        error: (error: unknown) => {
+          this.loading = false;
+          this.handleError(error, 'Users could not be loaded.');
+        }
+      });
+    } catch (error: unknown) {
+      this.loading = false;
+      this.handleError(error, 'Users could not be loaded.');
+    }
   }
 
   private loadCategories(): void {
-    this.categoryService.getCategories().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (categories) => {
-        this.categories = categories;
-      },
-      error: (error: HttpErrorResponse) => {
-        this.errorMessage = this.extractError(error, 'Categories could not be loaded.');
-      }
-    });
+    try {
+      this.categoryService.getCategories().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (categories) => {
+          this.categories = categories;
+        },
+        error: (error: unknown) => {
+          this.handleError(error, 'Categories could not be loaded.');
+        }
+      });
+    } catch (error: unknown) {
+      this.handleError(error, 'Categories could not be loaded.');
+    }
   }
 
   private buildCategoryRequest(): CreateCategoryRequest {
@@ -335,13 +400,7 @@ export class AdminComponent implements OnInit {
     };
   }
 
-  private extractError(error: HttpErrorResponse, fallback: string): string {
-    if (error.status === 0) {
-      return 'The API server is not reachable. Please ensure the backend is running.';
-    }
-    if (typeof error.error?.message === 'string') {
-      return error.error.message;
-    }
-    return fallback;
+  private handleError(error: unknown, fallback: string): void {
+    this.errorMessage = this.apiErrors.toMessage(error, fallback);
   }
 }

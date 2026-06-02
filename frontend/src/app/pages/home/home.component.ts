@@ -1,6 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { Observable } from 'rxjs';
+import { UserSummary } from '../../core/models/auth.models';
+import { AuthService } from '../../core/services/auth.service';
 
 interface HeroMetric {
   label: string;
@@ -20,6 +23,8 @@ interface FeatureItem {
   templateUrl: './home.component.html'
 })
 export class HomeComponent implements OnInit, OnDestroy {
+  readonly user$: Observable<UserSummary | null> = this.auth.currentUser$;
+
   readonly metrics: HeroMetric[] = [
     { label: 'active projects', value: '18' },
     { label: 'tasks closed this week', value: '74' },
@@ -46,6 +51,8 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   activeMetricIndex = 0;
   private timerId: number | null = null;
+
+  constructor(private readonly auth: AuthService) {}
 
   ngOnInit(): void {
     this.timerId = window.setInterval(() => {

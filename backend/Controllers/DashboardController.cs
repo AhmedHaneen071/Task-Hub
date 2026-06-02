@@ -33,6 +33,12 @@ public sealed class DashboardController(ApplicationDbContext db) : ApiController
         var openTasks = await taskQuery.CountAsync(task => task.Status != WorkTaskStatus.Done);
         var completedTasks = await taskQuery.CountAsync(task => task.Status == WorkTaskStatus.Done);
 
+        var statusDistribution = new TaskStatusDistribution(
+            await taskQuery.CountAsync(task => task.Status == WorkTaskStatus.ToDo),
+            await taskQuery.CountAsync(task => task.Status == WorkTaskStatus.InProgress),
+            await taskQuery.CountAsync(task => task.Status == WorkTaskStatus.Review),
+            await taskQuery.CountAsync(task => task.Status == WorkTaskStatus.Done));
+
         var priorityProjects = await projectQuery
             .Include(p => p.Owner)
             .Include(p => p.Category)
@@ -64,6 +70,7 @@ public sealed class DashboardController(ApplicationDbContext db) : ApiController
             activeProjects,
             openTasks,
             completedTasks,
+            statusDistribution,
             priorityProjects.Select(ToDto).ToList(),
             myTasks.Select(ToDto).ToList(),
             activity.Select(ToDto).ToList());
