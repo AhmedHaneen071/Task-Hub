@@ -6,16 +6,18 @@ TaskHub is a full-stack project management platform built with Angular 18 and AS
 
 ## ✨ Features
 
-- 🔐 JWT Authentication
-- 👥 Role-Based Access Control (Admin/User)
-- 📁 Project Management
-- ✅ Task Management & Tracking
-- 📊 Dashboard Overview
-- 📝 Activity Tracking
-- 🌙 Modern Dark Glassmorphism UI
-- 📱 Fully Responsive Design
-- 📚 Swagger API Documentation
-- 🗄 SQLite Database (Zero Installation Required)
+- 🔐 **JWT Authentication & Dynamic State Sync:** Secure token-based access with immediate navigation-bar state reactivity (hides Login/Signup actions instantly upon successful session initialization).
+- 👥 **Role-Based Access Control** (Admin/User)
+- 📁 **Project Management**
+- ✅ **Task Management & Tracking**
+- 📊 **Dashboard Overview**
+- 📝 **Activity Tracking**
+- 🛑 **Reactive Form Validation:** Bulletproof client-side checking using Angular Reactive Forms to validate data strings, email constraints, and character matching before endpoint dispatching.
+- 🛡️ **Graceful Exception Boundaries:** Comprehensive async catch blocks preventing background infrastructure faults or bad credentials from causing application failures.
+- 🌙 **Modern Dark Glassmorphism UI**
+- 📱 **Fully Responsive Design**
+- 📚 **Swagger API Documentation**
+- 🗄 **SQLite Database** (Zero Installation Required)
 
 ---
 
@@ -24,7 +26,7 @@ TaskHub is a full-stack project management platform built with Angular 18 and AS
 ### Frontend
 - Angular 18
 - TypeScript
-- RxJS
+- RxJS (Reactive Streams & Interceptors)
 - Reactive Forms
 
 ### Backend
@@ -44,14 +46,14 @@ TaskHub is a full-stack project management platform built with Angular 18 and AS
 
 Ensure the following tools are installed on your machine:
 
-1. **.NET 8 SDK**  
-   https://dotnet.microsoft.com/download/dotnet/8.0
+### 1. .NET 8 SDK
+https://dotnet.microsoft.com/download/dotnet/8.0
 
-2. **Node.js (LTS Version)**  
-   https://nodejs.org
+### 2. Node.js (LTS Version)
+https://nodejs.org
 
-3. **Git**  
-   https://git-scm.com
+### 3. Git
+https://git-scm.com
 
 ---
 
@@ -118,6 +120,18 @@ If the backend URL or port changes, update the API configuration in the Angular 
 
 ---
 
+## 🔧 Stability & Refactoring Updates
+
+Recent codebase enhancements successfully addressed critical UX flow and application hardening issues:
+
+| Scope | Remediation Achieved |
+|---------|----------------------|
+| Auth View States | Resolved stale persistent Login/Signup navigation actions by binding structural directives directly to centralized authentication state streams. |
+| Form Hardening | Added Angular Reactive Form validation constraints to prevent invalid submissions before API dispatch. |
+| Fault Mitigation | Implemented structured try-catch boundaries and interceptor-based error handling to suppress application-crashing exceptions gracefully. |
+
+---
+
 ## 🔐 Authentication & Demo Accounts
 
 The application is seeded with test accounts for development purposes.
@@ -158,9 +172,9 @@ Task-Hub/
 ├── frontend/
 │   ├── src/
 │   │   ├── app/
-│   │   │   ├── core/       # Services, Guards, Interceptors
-│   │   │   ├── pages/      # Application Pages
-│   │   │   ├── shared/     # Shared Components
+│   │   │   ├── core/       # Services, Guards, Interceptors (Auth State Logic)
+│   │   │   ├── pages/      # Login & Signup Pages
+│   │   │   ├── shared/     # Shared Components (Navbar, Layout)
 │   │   │   └── models/     # Interfaces & Models
 │   │   └── styles.css
 │   │
@@ -184,7 +198,7 @@ Swagger provides:
 - Endpoint testing
 - Request/response schemas
 - Authentication support
-- API documentation
+- Interactive API documentation
 
 ---
 
@@ -267,4 +281,18 @@ This project is intended for educational and portfolio purposes.
 
 ---
 
-**TaskHub** — A modern project management platform built with Angular and ASP.NET Core.
+## TaskHub
+
+*A modern project management platform built with Angular and ASP.NET Core.*
+
+Designed and maintained under the **Fusion Five / E2E Labs** workspace core.
+
+---
+
+### Commit the Changes
+
+```bash
+git add README.md
+git commit -m "docs: integrate dynamic auth states, validation parameters, and architecture stability updates"
+git push origin HEAD
+```
